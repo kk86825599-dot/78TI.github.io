@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>78TI 测试</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f2f2f2;
+  }
+  .container {
+    max-width: 600px;
+    margin: 50px auto;
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  h1 { text-align: center; }
+  button {
+    padding: 12px;
+    margin: 8px 0;
+    cursor: pointer;
+    width: 100%;
+    border: none;
+    border-radius: 6px;
+    background: #007bff;
+    color: #fff;
+    font-size: 14px;
+  }
+  button:hover {
+    background: #0056b3;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>78TI 测试</h1>
+  <div id="content">
+    <p>欢迎参加测试！点击开始按钮开始答题。</p>
+    <button onclick="startTest()">开始测试</button>
+  </div>
+</div>
+
+<script>
+// ======================
+// 题库（可扩展）
+// plus = 认同时增加
+// minus = 认同时减少（对立维度）
+// ======================
+const questions = [
+
+/* ================= A. 身份认同（自洽 / 摇摆） ================= */
+
+{
+  question: "有时我会质疑我的性取向。",
+  plus: "P",
+  minus: "A"
+},
+{
+  question: "我会反复思考自己的性取向是否“正确”。",
+  plus: "P",
+  minus: "A"
+},
+{
+  question: "我基本能坦然接受自己的性取向。",
+  plus: "A",
+  minus: "P"
+},
+{
+  question: "我曾希望自己不是现在的性取向。",
+  plus: "P",
+  minus: "A"
+},
+{
+  question: "当别人谈论相关话题时，我不会感到不适。",
+  plus: "A",
+  minus: "P"
+},
+
+/* ================= B. 偏好类型（身体 / 灵魂） ================= */
+
+{
+  question: "我更容易被一个人的外在吸引。",
+  plus: "E",
+  minus: "R"
+},
+{
+  question: "我更在意精神交流是否契合。",
+  plus: "R",
+  minus: "E"
+},
+{
+  question: "如果只有身体吸引但缺乏交流，我仍可能继续关系。",
+  plus: "E",
+  minus: "R"
+},
+{
+  question: "我更容易对有思想、有深度的人产生兴趣。",
+  plus: "R",
+  minus: "E"
+},
+{
+  question: "短暂的身体吸引对我来说也有价值。",
+  plus: "E",
+  minus: "R"
+},
+
+/* ================= C. 关系模式（保守 / 开放） ================= */
+
+{
+  question: "我更倾向于建立稳定且唯一的关系。",
+  plus: "R",
+  minus: "E"
+},
+{
+  question: "我可以接受非传统的关系形式（如开放关系）。",
+  plus: "E",
+  minus: "R"
+},
+{
+  question: "我更看重关系中的安全感与确定性。",
+  plus: "R",
+  minus: "E"
+},
+{
+  question: "我认为关系可以根据双方需求灵活调整。",
+  plus: "E",
+  minus: "R"
+},
+{
+  question: "我不太能接受关系中的不确定性。",
+  plus: "R",
+  minus: "E"
+},
+
+/* ================= D. 情感模式（给予 / 内敛） ================= */
+
+{
+  question: "在关系中，我更主动表达情感。",
+  plus: "E",
+  minus: "R"
+},
+{
+  question: "我习惯把情绪藏在心里。",
+  plus: "R",
+  minus: "E"
+},
+{
+  question: "我愿意为对方付出时间和精力。",
+  plus: "E",
+  minus: "R"
+},
+{
+  question: "我更倾向于自己消化情绪而不是表达。",
+  plus: "R",
+  minus: "E"
+},
+{
+  question: "我会通过行动而不是语言表达爱。",
+  plus: "E",
+  minus: "R"
+},
+
+];// ======================
+// 五阶段评分（对称）
+// ======================
+const options = [
+  { text: "非常不认同", value: -0.4 },
+  { text: "不认同", value: -0.2 },
+  { text: "不确定", value: 0 },
+  { text: "认同", value: 0.2 },
+  { text: "非常认同", value: 0.4 }
+];
+
+// ======================
+// 初始化分数
+// ======================
+let scores = { A:0, P:0, R:0, E:0 };
+let current = 0;
+
+// ======================
+// 开始测试
+// ======================
+function startTest() {
+  current = 0;
+  scores = { A:0, P:0, R:0, E:0 };
+  showQuestion();
+}
+
+// ======================
+// 显示题目
+// ======================
+function showQuestion() {
+  if (current >= questions.length) {
+    showResult();
+    return;
+  }
+
+  const q = questions[current];
+
+  let html = `<p><strong>第 ${current + 1} 题：</strong>${q.question}</p>`;
+
+  options.forEach(opt => {
+    html += `
+      <button onclick="selectOption('${q.plus}', '${q.minus}', ${opt.value})">
+        ${opt.text}
+      </button>
+    `;
+  });
+
+  document.getElementById('content').innerHTML = html;
+}
+
+// ======================
+// 选择答案（核心逻辑）
+// ======================
+function selectOption(plus, minus, value) {
+  scores[plus] += value;
+  scores[minus] -= value;
+
+  current++;
+  showQuestion();
+}
+
+// ======================
+// 结果计算
+// ======================
+function showResult() {
+
+  // 判断每个维度倾向
+  const identity = scores.A >= scores.P ? "自洽型" : "摇摆型";
+  const preference = scores.R >= scores.E ? "灵魂导向" : "身体导向";
+  const relation = scores.R >= scores.E ? "关系保守" : "关系开放";
+  const emotion = scores.E >= scores.R ? "情感外显（给予）" : "情感内敛";
+
+  // 总标签（四维组合）
+  const type = `${identity}｜${preference}｜${relation}｜${emotion}`;
+
+  // 简单描述（你后面可以扩展）
+  let description = "";
+
+  if (identity === "自洽型") {
+    description += "你对自我认同较为稳定，内在冲突较少。<br>";
+  } else {
+    description += "你在自我认同上可能存在一定波动与探索。<br>";
+  }
+
+  if (preference === "灵魂导向") {
+    description += "你更重视精神连接与内在共鸣。<br>";
+  } else {
+    description += "你更容易被外在与身体吸引。<br>";
+  }
+
+  if (relation === "关系保守") {
+    description += "你倾向稳定、安全的关系模式。<br>";
+  } else {
+    description += "你对关系形式持更开放态度。<br>";
+  }
+
+  if (emotion.includes("外显")) {
+    description += "你更倾向表达情感并主动付出。";
+  } else {
+    description += "你更习惯内化情绪，表达较为克制。";
+  }
+
+  document.getElementById('content').innerHTML = `
+    <h2>你的类型：</h2>
+    <h3>${type}</h3>
+
+    <h4>人格解析：</h4>
+    <p>${description}</p>
+
+    <h4>维度分数：</h4>
+    <pre>${JSON.stringify(scores, null, 2)}</pre>
+
+    <button onclick="startTest()">重新测试</button>
+  `;
+}
+</script>
+
+</body>
+</html>
